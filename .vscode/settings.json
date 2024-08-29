@@ -1,0 +1,6 @@
+{
+    // action save code
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "always"
+    }
+}
