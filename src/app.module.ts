@@ -4,8 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from './modules/database/database.module';
-import { HelloWorldModule } from './modules/hello-world/hello-world.module';
-import { TestModule } from './modules/test/test.module';
+import { WinstonModuleConfig } from './modules/winton/winton.module';
 
 @Module({
     imports: [
@@ -13,10 +12,8 @@ import { TestModule } from './modules/test/test.module';
             isGlobal: true,
             envFilePath: `.env.${process.env.NODE_ENV}.local`,
         }),
-        HelloWorldModule,
-        TestModule,
-
         DatabaseModule,
+        WinstonModuleConfig,
     ],
     controllers: [AppController],
     providers: [AppService],
