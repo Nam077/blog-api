@@ -1,0 +1,5 @@
+nest g res user modules
+nest g res blog modules
+nest g res tag modules
+nest g res category modules
+nest g res auth modules
