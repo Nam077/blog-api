@@ -12,7 +12,7 @@ export class UserService {
     ) {}
 
     create(createUserDto: CreateUserDto) {
-        return 'This action adds a new user';
+        return createUserDto;
     }
 
     findAll() {
