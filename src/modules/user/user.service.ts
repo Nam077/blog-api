@@ -1,15 +1,11 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 
-import { BlogService } from '../blog/blog.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UserService {
-    constructor(
-        @Inject(forwardRef(() => BlogService))
-        private readonly blogService: BlogService,
-    ) {}
+    constructor() {}
 
     create(createUserDto: CreateUserDto) {
         return createUserDto;
