@@ -1,6 +1,18 @@
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import {
+    Column,
+    CreateDateColumn,
+    DeleteDateColumn,
+    Entity,
+    JoinColumn,
+    OneToMany,
+    OneToOne,
+    PrimaryGeneratedColumn,
+    UpdateDateColumn,
+} from 'typeorm';
 
 import { ROLE_USER } from '../../../common';
+import { Blog } from '../../blog/entities/blog.entity';
+import { Profile } from './profile.entity';
 
 @Entity({
     name: 'users',
@@ -60,4 +72,15 @@ export class User {
         comment: 'Ngày xoá của người dùng',
     })
     deleteDate: Date;
+
+    // relationship
+
+    @OneToOne(() => Profile, (profile) => profile.user)
+    @JoinColumn({
+        name: 'profile_id',
+    })
+    profile: Profile;
+
+    @OneToMany(() => Blog, (blog) => blog.user)
+    blogs: Blog[];
 }

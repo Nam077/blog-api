@@ -15,24 +15,33 @@ export class UserController {
         return this.userService.create(createUserDto);
     }
 
-    @Get() //user
+    @Get()
     findAll() {
         return this.userService.findAll();
     }
 
     @Get(':id')
     findOne(@Param('id') id: string) {
-        return this.userService.findOne(+id);
+        return this.userService.findOne(id);
     }
-    // user/928321423432432
+
+    @Patch('restore/:id')
+    resore(@Param('id') id: string) {
+        return this.userService.restore(id);
+    }
 
     @Patch(':id')
     update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-        return this.userService.update(+id, updateUserDto);
+        return this.userService.update(id, updateUserDto);
     }
 
-    @Delete(':id') // user/928321423432432
+    @Delete('hard/:id')
+    removeHard(@Param('id') id: string) {
+        return this.userService.removeHard(id);
+    }
+
+    @Delete(':id')
     remove(@Param('id') id: string) {
-        return this.userService.remove(+id);
+        return this.userService.remove(id);
     }
 }
