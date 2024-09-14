@@ -32,6 +32,9 @@
 $ yarn install
 ```
 
+## env file
+
+
 ## Compile and run the project
 
 ```bash
