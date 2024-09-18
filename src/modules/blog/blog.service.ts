@@ -1,29 +1,34 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { APIResponseData, CrudInterface, PaginationData } from 'src/common/interfaces';
+import { Repository } from 'typeorm';
 
 import { CreateBlogDto } from './dto/create-blog.dto';
 import { UpdateBlogDto } from './dto/update-blog.dto';
+import { Blog } from './entities/blog.entity';
 
+interface FindAllDtoBlog {}
+interface UserAuth {
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+}
 @Injectable()
-export class BlogService {
-    constructor() {}
-
-    create(createBlogDto: CreateBlogDto) {
-        return 'This action adds a new blog';
-    }
-
-    findAll() {
-        return `This action returns all blog`;
-    }
-
-    findOne(id: number) {
-        return `This action returns a #${id} blog`;
-    }
-
-    update(id: number, updateBlogDto: UpdateBlogDto) {
-        return `This action updates a #${id} blog`;
-    }
-
-    remove(id: number) {
-        return `This action removes a #${id} blog`;
-    }
+export class BlogService
+    implements
+        CrudInterface<
+            Blog,
+            CreateBlogDto,
+            UpdateBlogDto,
+            FindAllDtoBlog,
+            PaginationData<Blog>,
+            APIResponseData<Blog>,
+            UserAuth
+        >
+{
+    constructor(
+        @InjectRepository(Blog)
+        private readonly blogRepository: Repository<Blog>,
+    ) {}
 }
