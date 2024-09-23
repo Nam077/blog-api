@@ -3,7 +3,7 @@ import { IsIn, IsNotEmpty, IsString, Length, Matches } from 'class-validator';
 
 import { ROLE_USER, ToUpperCase } from '../../../common';
 
-const REGEX_EMAIL =
+export const REGEX_EMAIL =
     // eslint-disable-next-line security/detect-unsafe-regex
     /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
 

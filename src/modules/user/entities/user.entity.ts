@@ -5,7 +5,6 @@ import {
     CreateDateColumn,
     DeleteDateColumn,
     Entity,
-    Index,
     JoinColumn,
     OneToMany,
     OneToOne,
@@ -32,7 +31,6 @@ export class User {
         name: 'email',
         comment: 'Email của người dùng',
     })
-    @Index()
     email: string;
 
     @Column({
