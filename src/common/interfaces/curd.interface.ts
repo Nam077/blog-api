@@ -17,8 +17,11 @@ export interface CrudInterface<ENTITY, CREATE_DTO, UPDATE_DTO, FIND_ALL_DTO, PAG
     deleteEntity(id: string): Promise<ENTITY>;
     delete(id: string, currentUser: USER_AUTH): Promise<API_RESPONSE>;
 
+    restoreEntity(id: string): Promise<ENTITY>;
+    restore(id: string, currentUser: USER_AUTH): Promise<API_RESPONSE>;
+
     softDeleteEntity(id: string): Promise<ENTITY>;
     softDelete(id: string, currentUser: USER_AUTH): Promise<API_RESPONSE>;
 
-    findOneOrFail(id: string, withDeleted?: boolean): Promise<ENTITY>;
+    findOneOrFail(id: string, options?: FindOneOptionCustom<ENTITY>, withDeleted?: boolean): Promise<ENTITY>;
 }

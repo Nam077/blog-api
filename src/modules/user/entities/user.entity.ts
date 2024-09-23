@@ -1,8 +1,11 @@
 import {
+    BeforeInsert,
+    BeforeUpdate,
     Column,
     CreateDateColumn,
     DeleteDateColumn,
     Entity,
+    Index,
     JoinColumn,
     OneToMany,
     OneToOne,
@@ -10,7 +13,7 @@ import {
     UpdateDateColumn,
 } from 'typeorm';
 
-import { ROLE_USER } from '../../../common';
+import { BcryptServiceInstance, ROLE_USER } from '../../../common';
 import { Blog } from '../../blog/entities/blog.entity';
 import { Profile } from './profile.entity';
 
@@ -29,6 +32,7 @@ export class User {
         name: 'email',
         comment: 'Email của người dùng',
     })
+    @Index()
     email: string;
 
     @Column({
@@ -83,4 +87,20 @@ export class User {
 
     @OneToMany(() => Blog, (blog) => blog.user)
     blogs: Blog[];
+
+    @BeforeInsert()
+    @BeforeUpdate()
+    validateData() {
+        if (this.password) {
+            this.password = BcryptServiceInstance.hash(this.password);
+        }
+
+        if (this.email) {
+            this.email = this.email.toLowerCase();
+        }
+    }
+
+    comparePassword(string: string): boolean {
+        return BcryptServiceInstance.compare(string, this.password);
+    }
 }

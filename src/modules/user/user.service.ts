@@ -1,104 +1,206 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import { BcryptServiceInstance } from '../../common';
+import { APIResponseData, CrudInterface, FindOneOptionCustom, PaginationData } from '../../common/interfaces';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
+import { UserAuth } from './user.controller';
 
+export class UserFindAllDto {}
 @Injectable()
-export class UserService {
+export class UserService
+    implements
+        CrudInterface<
+            User,
+            CreateUserDto,
+            UpdateUserDto,
+            UserFindAllDto,
+            PaginationData<User>,
+            APIResponseData<User>,
+            UserAuth
+        >
+{
     constructor(
         @InjectRepository(User)
         private readonly userRepository: Repository<User>,
     ) {}
 
-    async checkExistByEmail(email: string): Promise<boolean> {
-        return !!(await this.userRepository.findOne({
+    async checkExitsByEmail(email: string): Promise<boolean> {
+        return await this.userRepository.exists({
             where: {
                 email: email,
             },
             withDeleted: true,
-        }));
+        });
     }
 
-    async create(createUserDto: CreateUserDto) {
-        const { email, name, password, role } = createUserDto;
+    async findOneEntity(id: string, options?: FindOneOptionCustom<User>, withDeleted?: boolean): Promise<User> {
+        return this.userRepository.findOne({
+            where: { id: id },
+            ...options,
+            withDeleted: withDeleted,
+        });
+    }
 
-        if (await this.checkExistByEmail(email)) {
-            throw new ConflictException('Email already exists');
+    async findOne(id: string, currentUser: UserAuth): Promise<APIResponseData<User>> {
+        const user: User = await this.findOneOrFail(
+            id,
+            {
+                order: {
+                    name: 'ASC',
+                },
+            },
+            false,
+        );
+
+        return {
+            message: `Lấy thành công user có id: ${id} thành công`,
+            status: HttpStatus.FOUND,
+            data: user,
+        };
+    }
+
+    findAllEntity(findAllDto: UserFindAllDto, withDeleted?: boolean): Promise<PaginationData<User>> {
+        throw new Error('Method not implemented.');
+    }
+
+    findAll(findAllDto: UserFindAllDto, currentUser: UserAuth): Promise<APIResponseData<User>> {
+        throw new Error('Method not implemented.');
+    }
+
+    async createEntity(createDto: CreateUserDto): Promise<User> {
+        const { email } = createDto;
+
+        if (await this.checkExitsByEmail(email)) {
+            throw new ConflictException('User đã tồn tại');
         }
 
-        return this.userRepository.save({
-            email,
-            name,
-            password,
-            role,
-        });
+        const user: User = this.userRepository.create(createDto);
+
+        return await this.userRepository.save(user);
     }
 
-    findAll() {
-        return this.userRepository.find();
+    async create(createDto: CreateUserDto, currentUser: UserAuth): Promise<APIResponseData<User>> {
+        const user: User = await this.createEntity(createDto);
+
+        return {
+            message: 'Tạo người dùng thành công',
+            status: HttpStatus.CREATED,
+            data: user,
+        };
     }
 
-    async findOne(id: string) {
-        const user = await this.userRepository.findOne({
-            where: {
-                id: id,
+    async updateEntity(id: string, updateDto: UpdateUserDto): Promise<User> {
+        const { email } = updateDto;
+        const user = await this.findOneOrFail(id, {}, true);
+
+        if (user.email != email && (await this.checkExitsByEmail(email))) {
+            throw new ConflictException('Email đã tồn tại');
+        }
+
+        if (updateDto.password) {
+            updateDto.password = BcryptServiceInstance.hash(updateDto.password);
+        }
+
+        await this.userRepository.update(id, updateDto);
+
+        return await this.findOneOrFail(id, {}, true);
+    }
+
+    async update(id: string, updateDto: UpdateUserDto, currentUser: UserAuth): Promise<APIResponseData<User>> {
+        const user: User = await this.updateEntity(id, updateDto);
+
+        return {
+            message: 'Cập nhật user thành công',
+            status: HttpStatus.OK,
+            data: user,
+        };
+    }
+
+    async deleteEntity(id: string): Promise<User> {
+        const user = await this.findOneOrFail(id, {}, true);
+
+        if (!user.deleteDate) {
+            throw new BadRequestException('User này chưa xoá mềm nên không thể xoá vĩnh viễn');
+        }
+
+        await this.userRepository.delete(id);
+
+        return user;
+    }
+
+    async delete(id: string, currentUser: UserAuth): Promise<APIResponseData<User>> {
+        const user = await this.deleteEntity(id);
+
+        return {
+            message: 'Xóa vĩnh viễn user thành công',
+            status: HttpStatus.OK,
+            data: user,
+        };
+    }
+
+    async softDeleteEntity(id: string): Promise<User> {
+        const user = await this.findOneOrFail(id, {}, true);
+
+        if (user.deleteDate) {
+            throw new BadRequestException('User đã bị xóa');
+        }
+
+        await this.userRepository.softDelete(id);
+
+        return user;
+    }
+
+    async softDelete(id: string, currentUser: UserAuth): Promise<APIResponseData<User>> {
+        const user = await this.softDeleteEntity(id);
+
+        return {
+            message: 'Xóa user thành công',
+            status: HttpStatus.OK,
+            data: user,
+        };
+    }
+
+    async findOneOrFail(id: string, options?: FindOneOptionCustom<User>, withDeleted?: boolean): Promise<User> {
+        const user: User = await this.findOneEntity(
+            id,
+            {
+                order: {
+                    name: 'ASC',
+                },
             },
-            withDeleted: true,
-        });
+            withDeleted,
+        );
 
         if (!user) {
-            throw new NotFoundException('User not found');
+            throw new NotFoundException('Không tìm thấy user');
         }
 
         return user;
     }
 
-    update(id: string, updateUserDto: UpdateUserDto) {
-        return `This action updates a #${id} user`;
-    }
-
-    remove(id: string) {
-        return this.userRepository.softDelete(id);
-    }
-
-    async removeHard(id: string) {
-        const user: User = await this.userRepository.findOne({
-            where: {
-                id,
-            },
-            withDeleted: true,
-        });
-
-        if (!user) {
-            throw new NotFoundException('User không tồn tại');
-        }
+    async restoreEntity(id: string): Promise<User> {
+        const user = await this.findOneOrFail(id, {}, true);
 
         if (!user.deleteDate) {
-            throw new BadRequestException('User không được xoá mềm nên không thể xoá');
+            throw new BadRequestException('User này chưa xoá mềm nên không thể khôi phục');
         }
 
-        return this.userRepository.delete(id);
+        await this.userRepository.restore(id);
+
+        return user;
     }
 
-    async restore(id: string) {
-        const user: User = await this.userRepository.findOne({
-            where: {
-                id,
-            },
-            withDeleted: true,
-        });
+    async restore(id: string, currentUser: UserAuth): Promise<APIResponseData<User>> {
+        const user = await this.restoreEntity(id);
 
-        if (!user) {
-            throw new NotFoundException('User không tồn tại');
-        }
-
-        if (!user.deleteDate) {
-            throw new BadRequestException('User không được xoá mềm nên không thể khôi phục');
-        }
-
-        return await this.userRepository.restore(id);
+        return {
+            message: 'Khôi phục user thành công',
+            status: HttpStatus.OK,
+            data: user,
+        };
     }
 }
