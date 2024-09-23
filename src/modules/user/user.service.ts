@@ -203,4 +203,10 @@ export class UserService
             data: user,
         };
     }
+
+    async findByEmail(email: string): Promise<User> {
+        return await this.userRepository.findOne({
+            where: { email: email },
+        });
+    }
 }
