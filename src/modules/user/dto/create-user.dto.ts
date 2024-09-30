@@ -16,7 +16,7 @@ export class CreateUserDto {
         message: 'Email không được để trống',
     })
     @Matches(REGEX_EMAIL, {
-        message: 'Email không hợp lệ match với regex',
+        message: 'Email phải đúng định dạng',
     })
     email!: string;
 

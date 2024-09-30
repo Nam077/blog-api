@@ -67,7 +67,7 @@ export class User {
         name: 'update_date',
         comment: 'Ngày chỉnh sửa của người dùng',
     })
-    updateColumn: Date;
+    updateDate: Date;
 
     @DeleteDateColumn({
         name: 'delete_date',

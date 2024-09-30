@@ -1,9 +1,10 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 import { CreateUserDto } from './dto/create-user.dto';
+import { UserFindAllDto } from './dto/find-all-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { UserFindAllDto, UserService } from './user.service';
+import { UserService } from './user.service';
 
 export interface UserAuth {
     id: string;
@@ -11,12 +12,11 @@ export interface UserAuth {
 
 @ApiTags('User')
 @Controller('user')
+@ApiBearerAuth()
 export class UserController {
     private userAuth: UserAuth = {
         id: 'sdfsdfsdfsdfdsfdsf',
     };
-
-    private findAllDto: UserFindAllDto = {};
 
     constructor(private readonly userService: UserService) {}
 
@@ -26,8 +26,8 @@ export class UserController {
     }
 
     @Get()
-    findAll() {
-        return this.userService.findAll(this.findAllDto, this.userAuth);
+    findAll(@Query() userFindAllDto: UserFindAllDto) {
+        return this.userService.findAll(userFindAllDto, this.userAuth);
     }
 
     @Get(':id')

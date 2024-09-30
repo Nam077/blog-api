@@ -36,7 +36,7 @@ export class Category {
         name: 'description',
         comment: 'Mô tả ngắn của danh mục',
     })
-    desciption: string;
+    description: string;
 
     @CreateDateColumn({
         name: 'create_date',

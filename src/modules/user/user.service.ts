@@ -1,15 +1,15 @@
 import { BadRequestException, ConflictException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 
 import { BcryptServiceInstance } from '../../common';
 import { APIResponseData, CrudInterface, FindOneOptionCustom, PaginationData } from '../../common/interfaces';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UserFindAllDto } from './dto/find-all-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { UserAuth } from './user.controller';
 
-export class UserFindAllDto {}
 @Injectable()
 export class UserService
     implements
@@ -63,12 +63,53 @@ export class UserService
         };
     }
 
-    findAllEntity(findAllDto: UserFindAllDto, withDeleted?: boolean): Promise<PaginationData<User>> {
-        throw new Error('Method not implemented.');
+    async findAllEntity(findAllDto: UserFindAllDto, withDeleted?: boolean): Promise<PaginationData<User>> {
+        const { limit, page, search, sort, sortField } = findAllDto;
+
+        const [data, count] = await this.userRepository.findAndCount({
+            where: search
+                ? [
+                      {
+                          name: Like(`%${search}%`),
+                      },
+                      {
+                          email: Like(`%${search}%`),
+                      },
+                  ]
+                : {},
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                createDate: true,
+                updateDate: true,
+                deleteDate: true,
+            },
+            relations: {},
+            take: limit,
+            skip: (page - 1) * limit,
+        });
+
+        return {
+            items: data,
+            total: count,
+            limit: findAllDto.limit,
+            page: findAllDto.page,
+            totalPages: Math.ceil(count / findAllDto.limit),
+            nextPage: page * limit < count ? findAllDto.page + 1 : undefined,
+            prevPage: page > 1 ? findAllDto.page - 1 : undefined,
+        };
     }
 
-    findAll(findAllDto: UserFindAllDto, currentUser: UserAuth): Promise<APIResponseData<User>> {
-        throw new Error('Method not implemented.');
+    async findAll(findAllDto: UserFindAllDto, currentUser: UserAuth): Promise<APIResponseData<User>> {
+        const data: PaginationData<User> = await this.findAllEntity(findAllDto, false);
+
+        return {
+            message: 'Lấy danh sách user thành công',
+            status: HttpStatus.FOUND,
+            ...data,
+        };
     }
 
     async createEntity(createDto: CreateUserDto): Promise<User> {
@@ -204,9 +245,24 @@ export class UserService
         };
     }
 
-    async findByEmail(email: string): Promise<User> {
+    async findUserByEmail(email: string, options?: FindOneOptionCustom<User>, withDeleted?: boolean): Promise<User> {
         return await this.userRepository.findOne({
             where: { email: email },
+            ...options,
+            withDeleted: withDeleted,
+        });
+    }
+
+    async findOneByEmailAndId(
+        email: string,
+        sub: string,
+        options?: FindOneOptionCustom<User>,
+        withDeleted?: boolean,
+    ): Promise<User> {
+        return await this.userRepository.findOne({
+            where: { email: email, id: sub },
+            ...options,
+            withDeleted: withDeleted,
         });
     }
 }

@@ -1,122 +1,75 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
-import * as crypto from 'crypto';
-import * as fs from 'fs';
 
+import { JwtPayload } from '../../common/interfaces';
 import { User } from '../user/entities/user.entity';
 import { UserService } from '../user/user.service';
 import { LoginDto } from './dto/login.dto';
+import { JwtServiceLocal } from './jwt.service';
 
-export interface JWTPayload {
-    sub: string;
-    email: string;
-    name: string;
-    role: string;
-}
 export interface LoginResponse {
-    message: string;
-    data: {
-        accessToken: string;
-        refreshToken: string;
-        user: User;
+    accessToken: string;
+    refreshToken: {
+        token: string;
+        exp: number;
     };
+    message: string;
+    user: Partial<User>;
 }
 @Injectable()
 export class AuthService {
     constructor(
-        private readonly jwtService: JwtService,
-        private readonly userService: UserService,
+        private readonly jwtService: JwtServiceLocal,
         private readonly configService: ConfigService,
+        private readonly userService: UserService,
     ) {}
 
     async login(loginDto: LoginDto): Promise<LoginResponse> {
-        const user: User = await this.userService.findByEmail(loginDto.email);
+        const user = await this.userService.findUserByEmail(loginDto.email);
 
-        if (!user) {
-            throw new UnauthorizedException('Email hoặc mật khẩu không đúng');
-        }
+        if (!user) throw new UnauthorizedException('Email hoặc mật khẩu không đúng');
+        if (!user.comparePassword(loginDto.password)) throw new UnauthorizedException('Email hoặc mật khẩu không đúng');
 
-        const isPasswordMatch = user.comparePassword(loginDto.password);
+        delete user.password;
 
-        if (!isPasswordMatch) {
-            throw new UnauthorizedException('Email hoặc mật khẩu không đúng');
-        }
-
-        const data = await this.generatToken(user);
-
-        delete data.user.password;
-
-        return {
-            message: 'Đăng nhập thanh công',
-            data,
-        };
-    }
-
-    async generateAccessToken(user: User) {
-        const payload: JWTPayload = {
+        const { accessToken, refreshToken } = this.jwtService.signToken({
             sub: user.id,
             email: user.email,
             name: user.name,
-            role: user.role,
-        };
-
-        return this.jwtService.sign(payload, {
-            algorithm: 'RS256',
-            privateKey: this.configService.get<string>('RSA_PRIVATE_KEY_ACESS').replaceAll('\\n', '\n'),
-            expiresIn: this.configService.get<string>('ACESS_TOKEN_EXPIRES_IN'),
         });
-    }
-
-    async generateRefreshToken(user: User) {
-        const payload: JWTPayload = {
-            sub: user.id,
-            email: user.email,
-            name: user.name,
-            role: user.role,
-        };
-
-        return this.jwtService.sign(payload, {
-            algorithm: 'RS256',
-            privateKey: this.configService.get<string>('RSA_PRIVATE_KEY_RF').replaceAll('\\n', '\n'),
-            expiresIn: this.configService.get<string>('REFRESH_TOKEN_EXPIRES_IN'),
-        });
-    }
-
-    async generatToken(user: User) {
-        const accessToken = await this.generateAccessToken(user);
-        const refreshToken = await this.generateRefreshToken(user);
 
         return {
+            message: 'Đăng nhập thành công',
             accessToken,
             refreshToken,
             user,
         };
     }
 
-    async generateKeyPairForRSA() {
-        const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
-            modulusLength: 4096,
-            publicKeyEncoding: {
-                type: 'spki',
-                format: 'pem',
-            },
-            privateKeyEncoding: {
-                type: 'pkcs8',
-                format: 'pem',
-            },
+    async refresh(currenUser: User, refresh_token: any) {
+        refresh_token;
+        const user = await this.userService.findUserByEmail(currenUser.email);
+
+        const accessToken = this.jwtService.signAcessToken({
+            sub: user.id,
+            email: user.email,
+            name: user.name,
         });
 
-        fs.writeFileSync('public.pem', publicKey);
-        fs.writeFileSync('private.pem', privateKey);
-
         return {
-            publicKey,
-            privateKey,
+            message: 'Refresh token thành công',
+            accessToken,
         };
     }
 
-    async validateUser(payload: JWTPayload) {
-        return await this.userService.findOneOrFail(payload.sub);
+    async validateUser(payload: JwtPayload) {
+        return await this.userService.findOneByEmailAndId(payload.email, payload.sub, {
+            select: {
+                id: true,
+                email: true,
+                name: true,
+                role: true,
+            },
+        });
     }
 }

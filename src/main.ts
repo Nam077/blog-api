@@ -1,6 +1,7 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import * as cookieParser from 'cookie-parser';
 
 import { AppModule } from './app.module';
 
@@ -13,6 +14,8 @@ const bootstrap = async () => {
             transform: true,
         }),
     );
+    /// config cookie
+    app.use(cookieParser());
 
     const config = new DocumentBuilder()
         .setTitle('Cats example')
