@@ -1,7 +1,8 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 import { CurrentUser } from '../../common';
+import { JwtGuard } from '../auth/guards/jwt.guard';
 import { UserAuth } from '../user/user.controller';
 import { BlogService } from './blog.service';
 import { CreateBlogDto } from './dto/create-blog.dto';
@@ -11,6 +12,7 @@ import { UpdateBlogDto } from './dto/update-blog.dto';
 @Controller('blog')
 @ApiTags('Blog')
 @ApiBearerAuth()
+@UseGuards(JwtGuard)
 export class BlogController {
     constructor(private readonly blogService: BlogService) {}
 

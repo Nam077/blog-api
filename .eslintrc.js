@@ -140,15 +140,15 @@ module.exports = {
         },
       },
     ],
-  //   '@typescript-eslint/explicit-member-accessibility': [
-  //     'error',
-  //     {
-  //       accessibility: 'explicit',
-  //       overrides: {
-  //         constructors: 'no-public',
-  //       },
-  //     },
-  //   ],
+    //   '@typescript-eslint/explicit-member-accessibility': [
+    //     'error',
+    //     {
+    //       accessibility: 'explicit',
+    //       overrides: {
+    //         constructors: 'no-public',
+    //       },
+    //     },
+    //   ],
     '@typescript-eslint/method-signature-style': ['error', 'property'],
     'lines-between-class-members': [
       'error',
@@ -156,6 +156,14 @@ module.exports = {
       { exceptAfterSingleLine: true }
     ],
     // Quy tắc của plugin security
-  //   'security/detect-object-injection': 'off', // Tắt quy tắc nếu bạn gặp nhiều false positives
+    //   'security/detect-object-injection': 'off', // Tắt quy tắc nếu bạn gặp nhiều false positives
+  },
+  settings: {
+    'import/resolver': {
+      typescript: {
+        "alwaysTryTypes": true, // Tùy chọn này để ESLint tìm trong các thư viện node_modules
+        "project": "./tsconfig.json" // Đảm bảo chỉ ra đúng đường dẫn đến file tsconfig.json
+      }, // This loads alias config from tsconfig.json
+    },
   },
 };

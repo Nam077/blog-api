@@ -3,7 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import slugify from 'slugify';
 import { Like, Repository } from 'typeorm';
 
-import { APIResponseData, CrudInterface, FindOneOptionCustom, PaginationData } from '../../common';
+import { APIResponseData, CrudInterface, FindOneOptionCustom, PaginationData } from '@/common';
+
 import { UserAuth } from '../user/user.controller';
 import { CategoryFindAllDto } from './dto/blog-find-all.dto';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -178,7 +179,7 @@ export class CategoryService
     }
 
     async deleteEntity(id: string): Promise<Category> {
-        const category = await this.findOneOrFail(id);
+        const category = await this.findOneOrFail(id, {}, true);
 
         if (!category.deleteDate) {
             throw new BadRequestException(`Category chưa bị xoá`);

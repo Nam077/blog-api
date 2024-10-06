@@ -11,10 +11,10 @@ import {
     UpdateDateColumn,
 } from 'typeorm';
 
-import { BlogStatus } from '../../../common';
-import { Category } from '../../category/entities/category.entity';
-import { Tag } from '../../tag/entities/tag.entity';
-import { User } from '../../user/entities/user.entity';
+import { BlogStatus } from '@/common';
+import { Category } from '@/modules/category/entities/category.entity';
+import { Tag } from '@/modules/tag/entities/tag.entity';
+import { User } from '@/modules/user/entities/user.entity';
 
 @Entity({
     name: 'blogs',
@@ -49,7 +49,7 @@ export class Blog {
         name: 'description',
         comment: 'Mô tả ngắn của bài viết',
     })
-    desciption: string;
+    description: string;
 
     @Column({
         type: 'enum',
@@ -77,7 +77,7 @@ export class Blog {
         name: 'update_date',
         comment: 'Ngày chỉnh sửa của bài viết',
     })
-    updateColumn: Date;
+    updateDate: Date;
 
     @DeleteDateColumn({
         name: 'delete_date',

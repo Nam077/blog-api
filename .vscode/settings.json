@@ -3,7 +3,5 @@
     "editor.codeActionsOnSave": {
         "source.fixAll.eslint": "always"
     },
-    //import realtive
-    "javascript.preferences.importModuleSpecifier": "relative",
-    "typescript.preferences.importModuleSpecifier": "relative"
+    "typescript.tsdk": "node_modules/typescript/lib"
 }

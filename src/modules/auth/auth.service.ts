@@ -1,11 +1,11 @@
+import { LoginDto } from '@modules/auth/dto/login.dto';
+import { JwtServiceLocal } from '@modules/auth/jwt.service';
+import { User } from '@modules/user/entities/user.entity';
+import { UserService } from '@modules/user/user.service';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-import { JwtPayload } from '../../common/interfaces';
-import { User } from '../user/entities/user.entity';
-import { UserService } from '../user/user.service';
-import { LoginDto } from './dto/login.dto';
-import { JwtServiceLocal } from './jwt.service';
+import { JwtPayload } from '@/common';
 
 export interface LoginResponse {
     accessToken: string;
