@@ -35,6 +35,7 @@ export class Tag {
         type: 'tinytext',
         name: 'description',
         comment: 'Mô tả ngắn của tag',
+        nullable: true,
     })
     desciption: string;
 

@@ -26,6 +26,11 @@ export class CategoryController {
         return this.categoryService.findAll(categoryFindAllDto, currentUser);
     }
 
+    @Get('slug/:slug')
+    findOneBySlug(@Param('slug') id: string, @CurrentUser<UserAuth>() currentUser: UserAuth) {
+        return this.categoryService.findOneBySlug(id, currentUser);
+    }
+
     @Get(':id')
     findOne(@Param('id') id: string, @CurrentUser<UserAuth>() currentUser: UserAuth) {
         return this.categoryService.findOne(id, currentUser);

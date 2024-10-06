@@ -48,7 +48,7 @@ export class Category {
         name: 'update_date',
         comment: 'Ngày chỉnh sửa của danh mục',
     })
-    updateColumn: Date;
+    updateDate: Date;
 
     @DeleteDateColumn({
         name: 'delete_date',

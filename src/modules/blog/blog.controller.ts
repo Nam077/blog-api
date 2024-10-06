@@ -1,42 +1,60 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+import { CurrentUser } from '../../common';
 import { UserAuth } from '../user/user.controller';
-import { BlogService, FindAllDtoBlog } from './blog.service';
+import { BlogService } from './blog.service';
 import { CreateBlogDto } from './dto/create-blog.dto';
+import { BlogFindAllDto } from './dto/find-all.dto';
 import { UpdateBlogDto } from './dto/update-blog.dto';
 
 @Controller('blog')
+@ApiTags('Blog')
+@ApiBearerAuth()
 export class BlogController {
-    private userAuth: UserAuth = {
-        id: 'sdfsdfsdfsdfdsfdsf',
-    };
-
-    private findAllBlogDto: FindAllDtoBlog = {};
-
     constructor(private readonly blogService: BlogService) {}
 
     @Post()
-    create(@Body() createBlogDto: CreateBlogDto) {
-        return this.blogService.create(createBlogDto, this.userAuth);
+    create(@Body() createCategoryDto: CreateBlogDto, @CurrentUser<UserAuth>() currentUser: UserAuth) {
+        return this.blogService.create(createCategoryDto, currentUser);
     }
 
     @Get()
-    findAll() {
-        return this.blogService.findAll(this.findAllBlogDto, this.userAuth);
+    findAll(@Query() blogFindAllDto: BlogFindAllDto, @CurrentUser<UserAuth>() currentUser: UserAuth) {
+        return this.blogService.findAll(blogFindAllDto, currentUser);
+    }
+
+    @Get('slug/:slug')
+    findOneBySlug(@Param('slug') id: string, @CurrentUser<UserAuth>() currentUser: UserAuth) {
+        return this.blogService.findOneBySlug(id, currentUser);
     }
 
     @Get(':id')
-    findOne(@Param('id') id: string) {
-        return this.blogService.findOne(id, this.userAuth);
+    findOne(@Param('id') id: string, @CurrentUser<UserAuth>() currentUser: UserAuth) {
+        return this.blogService.findOne(id, currentUser);
+    }
+
+    @Patch('restore/:id')
+    restore(@Param('id') id: string, @CurrentUser<UserAuth>() currentUser: UserAuth) {
+        return this.blogService.restore(id, currentUser);
     }
 
     @Patch(':id')
-    update(@Param('id') id: string, @Body() updateBlogDto: UpdateBlogDto) {
-        return this.blogService.update(id, updateBlogDto, this.userAuth);
+    update(
+        @Param('id') id: string,
+        @Body() updateBlogDto: UpdateBlogDto,
+        @CurrentUser<UserAuth>() currentUser: UserAuth,
+    ) {
+        return this.blogService.update(id, updateBlogDto, currentUser);
+    }
+
+    @Delete('hard/:id')
+    hardDelete(@Param('id') id: string, @CurrentUser<UserAuth>() currentUser: UserAuth) {
+        return this.blogService.delete(id, currentUser);
     }
 
     @Delete(':id')
-    remove(@Param('id') id: string) {
-        return this.blogService.delete(id, this.userAuth);
+    delete(@Param('id') id: string, @CurrentUser<UserAuth>() currentUser: UserAuth) {
+        return this.blogService.softDelete(id, currentUser);
     }
 }

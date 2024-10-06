@@ -1,7 +1,7 @@
-import { ConflictException, HttpStatus, Injectable } from '@nestjs/common';
+import { BadRequestException, ConflictException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import slugify from 'slugify';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 
 import { APIResponseData, CrudInterface, FindOneOptionCustom, PaginationData } from '../../common';
 import { UserAuth } from '../user/user.controller';
@@ -28,20 +28,90 @@ export class CategoryService
         private readonly categoryRepository: Repository<Category>,
     ) {}
 
-    findOneEntity(id: string, options?: FindOneOptionCustom<Category>, withDeleted?: boolean): Promise<Category> {
-        throw new Error('Method not implemented.');
+    async findOneEntity(id: string, options?: FindOneOptionCustom<Category>, withDeleted?: boolean): Promise<Category> {
+        return await this.categoryRepository.findOne({
+            where: { id: id },
+            ...options,
+            withDeleted: withDeleted,
+        });
     }
 
-    findOne(id: string, currentUser: UserAuth): Promise<APIResponseData<Category>> {
-        throw new Error('Method not implemented.');
+    async findOne(id: string, currentUser: UserAuth): Promise<APIResponseData<Category>> {
+        const category = await this.findOneOrFail(id);
+
+        return {
+            message: 'Lấy category thành công',
+            status: HttpStatus.FOUND,
+            data: category,
+        };
     }
 
-    findAllEntity(findAllDto: CategoryFindAllDto, withDeleted?: boolean): Promise<PaginationData<Category>> {
-        throw new Error('Method not implemented.');
+    async findOneBySlug(slug: string, currentUser: UserAuth): Promise<APIResponseData<Category>> {
+        const category = await this.categoryRepository.findOne({
+            where: { slug: slug },
+            withDeleted: false,
+        });
+
+        return {
+            message: 'Lấy category thành công',
+            status: HttpStatus.FOUND,
+            data: category,
+        };
     }
 
-    findAll(findAllDto: CategoryFindAllDto, currentUser: UserAuth): Promise<APIResponseData<Category>> {
-        throw new Error('Method not implemented.');
+    async findAllEntity(findAllDto: CategoryFindAllDto, withDeleted?: boolean): Promise<PaginationData<Category>> {
+        const { limit, page, search, sort, sortField } = findAllDto;
+
+        const [data, count] = await this.categoryRepository.findAndCount({
+            where: search
+                ? [
+                      {
+                          name: Like(`%${search}%`),
+                      },
+                      {
+                          slug: Like(`%${search}%`),
+                      },
+                      {
+                          description: Like(`%${search}%`),
+                      },
+                  ]
+                : {},
+            select: {
+                id: true,
+                name: true,
+                slug: true,
+                description: true,
+                createDate: true,
+                deleteDate: true,
+                updateDate: true,
+            },
+            order: {
+                [sortField]: sort,
+            },
+            relations: {},
+            take: limit,
+            skip: (page - 1) * limit,
+        });
+
+        return {
+            items: data,
+            total: count,
+            limit: findAllDto.limit,
+            page: findAllDto.page,
+            totalPages: Math.ceil(count / findAllDto.limit),
+            nextPage: page * limit < count ? findAllDto.page + 1 : undefined,
+            prevPage: page > 1 ? findAllDto.page - 1 : undefined,
+        };
+    }
+
+    async findAll(findAllDto: CategoryFindAllDto, currentUser: UserAuth): Promise<APIResponseData<Category>> {
+        const categories = await this.findAllEntity(findAllDto);
+
+        return {
+            message: 'Lấy danh sách category thành công',
+            status: HttpStatus.FOUND,
+            ...categories,
+        };
     }
 
     async checkExitsBySlug(slug: string): Promise<boolean> {
@@ -76,39 +146,116 @@ export class CategoryService
         };
     }
 
-    updateEntity(id: string, updateDto: UpdateCategoryDto): Promise<Category> {
-        throw new Error('Method not implemented.');
+    async updateEntity(id: string, updateDto: UpdateCategoryDto): Promise<Category> {
+        const { name, description } = updateDto;
+        const category = await this.findOneOrFail(id);
+        let slug = category.slug;
+
+        if (name) {
+            slug = slugify(name, { lower: true });
+
+            if (category.slug !== slug && (await this.checkExitsBySlug(slug))) {
+                throw new ConflictException(`Slug ${slug} đã tồn tại`);
+            }
+
+            category.name = name;
+            category.slug = slug;
+        }
+
+        if (description) {
+            category.description = description;
+        }
+
+        return await this.categoryRepository.save(category);
     }
 
-    update(id: string, updateDto: UpdateCategoryDto, currentUser: UserAuth): Promise<APIResponseData<Category>> {
-        throw new Error('Method not implemented.');
+    async update(id: string, updateDto: UpdateCategoryDto, currentUser: UserAuth): Promise<APIResponseData<Category>> {
+        return {
+            message: 'Cập nhật category thành công',
+            status: HttpStatus.OK,
+            data: await this.updateEntity(id, updateDto),
+        };
     }
 
-    deleteEntity(id: string): Promise<Category> {
-        throw new Error('Method not implemented.');
+    async deleteEntity(id: string): Promise<Category> {
+        const category = await this.findOneOrFail(id);
+
+        if (!category.deleteDate) {
+            throw new BadRequestException(`Category chưa bị xoá`);
+        }
+
+        await this.categoryRepository.delete(id);
+
+        return category;
     }
 
-    delete(id: string, currentUser: UserAuth): Promise<APIResponseData<Category>> {
-        throw new Error('Method not implemented.');
+    async delete(id: string, currentUser: UserAuth): Promise<APIResponseData<Category>> {
+        const category = await this.deleteEntity(id);
+
+        return {
+            message: 'Xoá category thành công',
+            status: HttpStatus.OK,
+            data: category,
+        };
     }
 
-    restoreEntity(id: string): Promise<Category> {
-        throw new Error('Method not implemented.');
+    async restoreEntity(id: string): Promise<Category> {
+        const category = await this.findOneOrFail(id, {}, true);
+
+        if (!category.deleteDate) {
+            throw new BadRequestException(`Category chưa bị xoá`);
+        }
+
+        await this.categoryRepository.restore(id);
+
+        return category;
     }
 
-    restore(id: string, currentUser: UserAuth): Promise<APIResponseData<Category>> {
-        throw new Error('Method not implemented.');
+    async restore(id: string, currentUser: UserAuth): Promise<APIResponseData<Category>> {
+        const category = await this.restoreEntity(id);
+
+        return {
+            message: 'Khôi phục category thành công',
+            status: HttpStatus.OK,
+            data: category,
+        };
     }
 
-    softDeleteEntity(id: string): Promise<Category> {
-        throw new Error('Method not implemented.');
+    async softDeleteEntity(id: string): Promise<Category> {
+        const category = await this.findOneOrFail(id, {
+            relations: { blogs: true },
+        });
+
+        if (category.deleteDate) {
+            throw new BadRequestException(`Category đã bị xoá`);
+        }
+
+        if (category.blogs && category.blogs.length > 0) {
+            throw new BadRequestException(`Category đang chứa blog`);
+        }
+
+        await this.categoryRepository.softDelete(id);
+
+        return category;
     }
 
-    softDelete(id: string, currentUser: UserAuth): Promise<APIResponseData<Category>> {
-        throw new Error('Method not implemented.');
+    async softDelete(id: string, currentUser: UserAuth): Promise<APIResponseData<Category>> {
+        const category = await this.deleteEntity(id);
+
+        return {
+            message: 'Xoá category thành công',
+            status: HttpStatus.OK,
+            data: category,
+        };
     }
 
-    findOneOrFail(id: string, options?: FindOneOptionCustom<Category>, withDeleted?: boolean): Promise<Category> {
-        throw new Error('Method not implemented.');
+    async findOneOrFail(id: string, options?: FindOneOptionCustom<Category>, withDeleted?: boolean): Promise<Category> {
+        const category: Category = await this.findOneEntity(id, options, withDeleted);
+
+        if (!category) {
+            throw new NotFoundException(`Category không tồn tại`);
+        }
+
+        return category;
     }
 }

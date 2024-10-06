@@ -86,6 +86,9 @@ export class UserService
                 updateDate: true,
                 deleteDate: true,
             },
+            order: {
+                [sortField]: sort,
+            },
             relations: {},
             take: limit,
             skip: (page - 1) * limit,

@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { APIResponseData, CrudInterface, FindOneOptionCustom, PaginationData } from 'src/common/interfaces';
 import { Repository } from 'typeorm';
 
+import { APIResponseData, CrudInterface, FindOneOptionCustom, PaginationData } from '../../common';
+import { CategoryService } from '../category/category.service';
+import { TagService } from '../tag/tag.service';
 import { UserAuth } from '../user/user.controller';
 import { CreateBlogDto } from './dto/create-blog.dto';
 import { UpdateBlogDto } from './dto/update-blog.dto';
@@ -26,65 +28,71 @@ export class BlogService
     constructor(
         @InjectRepository(Blog)
         private readonly blogRepository: Repository<Blog>,
+        private readonly categoryService: CategoryService,
+        private readonly tagService: TagService,
     ) {}
 
-    findOneEntity(id: string, options?: FindOneOptionCustom<Blog>, withDeleted?: boolean): Promise<Blog> {
+    findOneBySlug(id: string, currentUser: UserAuth) {
         throw new Error('Method not implemented.');
     }
 
-    findOne(id: string, currentUser: UserAuth): Promise<APIResponseData<Blog>> {
+    async findOneEntity(id: string, options?: FindOneOptionCustom<Blog>, withDeleted?: boolean): Promise<Blog> {
         throw new Error('Method not implemented.');
     }
 
-    findAllEntity(findAllDto: FindAllDtoBlog, withDeleted?: boolean): Promise<PaginationData<Blog>> {
+    async findOne(id: string, currentUser: UserAuth): Promise<APIResponseData<Blog>> {
         throw new Error('Method not implemented.');
     }
 
-    findAll(findAllDto: FindAllDtoBlog, currentUser: UserAuth): Promise<APIResponseData<Blog>> {
+    async findAllEntity(findAllDto: FindAllDtoBlog, withDeleted?: boolean): Promise<PaginationData<Blog>> {
         throw new Error('Method not implemented.');
     }
 
-    createEntity(createDto: CreateBlogDto): Promise<Blog> {
+    async findAll(findAllDto: FindAllDtoBlog, currentUser: UserAuth): Promise<APIResponseData<Blog>> {
         throw new Error('Method not implemented.');
     }
 
-    create(createDto: CreateBlogDto, currentUser: UserAuth): Promise<APIResponseData<Blog>> {
+    async createEntity(createDto: CreateBlogDto): Promise<Blog> {
         throw new Error('Method not implemented.');
     }
 
-    updateEntity(id: string, updateDto: UpdateBlogDto): Promise<Blog> {
+    async create(createDto: CreateBlogDto, currentUser: UserAuth): Promise<APIResponseData<Blog>> {
         throw new Error('Method not implemented.');
     }
 
-    update(id: string, updateDto: UpdateBlogDto, currentUser: UserAuth): Promise<APIResponseData<Blog>> {
+    async updateEntity(id: string, updateDto: UpdateBlogDto): Promise<Blog> {
         throw new Error('Method not implemented.');
     }
 
-    deleteEntity(id: string): Promise<Blog> {
+    async update(id: string, updateDto: UpdateBlogDto, currentUser: UserAuth): Promise<APIResponseData<Blog>> {
         throw new Error('Method not implemented.');
     }
 
-    delete(id: string, currentUser: UserAuth): Promise<APIResponseData<Blog>> {
+    async deleteEntity(id: string): Promise<Blog> {
         throw new Error('Method not implemented.');
     }
 
-    restoreEntity(id: string): Promise<Blog> {
+    async delete(id: string, currentUser: UserAuth): Promise<APIResponseData<Blog>> {
         throw new Error('Method not implemented.');
     }
 
-    restore(id: string, currentUser: UserAuth): Promise<APIResponseData<Blog>> {
+    async restoreEntity(id: string): Promise<Blog> {
         throw new Error('Method not implemented.');
     }
 
-    softDeleteEntity(id: string): Promise<Blog> {
+    async restore(id: string, currentUser: UserAuth): Promise<APIResponseData<Blog>> {
         throw new Error('Method not implemented.');
     }
 
-    softDelete(id: string, currentUser: UserAuth): Promise<APIResponseData<Blog>> {
+    async softDeleteEntity(id: string): Promise<Blog> {
         throw new Error('Method not implemented.');
     }
 
-    findOneOrFail(id: string, options?: FindOneOptionCustom<Blog>, withDeleted?: boolean): Promise<Blog> {
+    async softDelete(id: string, currentUser: UserAuth): Promise<APIResponseData<Blog>> {
+        throw new Error('Method not implemented.');
+    }
+
+    async findOneOrFail(id: string, options?: FindOneOptionCustom<Blog>, withDeleted?: boolean): Promise<Blog> {
         throw new Error('Method not implemented.');
     }
 }
